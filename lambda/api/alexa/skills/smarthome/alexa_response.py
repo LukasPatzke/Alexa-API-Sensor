@@ -23,6 +23,7 @@ class AlexaResponse:
 
         self.context_properties = []
         self.payload_endpoints = []
+        self.payload_change = None
 
         # Set up the response structure
         self.context = {}
@@ -66,6 +67,26 @@ class AlexaResponse:
 
     def add_payload_endpoint(self, **kwargs):
         self.payload_endpoints.append(self.create_payload_endpoint(**kwargs))
+
+    def add_payload_change(self, **kwargs):
+        self.payload_change = self.create_payload_change(**kwargs)
+
+    def create_payload_change(self, **kwargs):
+        return {
+            'cause': {
+                'type': kwargs.get('cause', 'PHYSICAL_INTERACTION')
+            },
+            'properties': kwargs.get('properties', [])
+        }
+
+    def create_payload_change_property(self, **kwargs):
+        return {
+            'namespace': kwargs.get('namespace', 'Alexa.EndpointHealth'),
+            'name': kwargs.get('name', 'connectivity'),
+            'value': kwargs.get('value', {'value': 'OK'}),
+            'timeOfSample': get_utc_timestamp(),
+            'uncertaintyInMilliseconds': kwargs.get('uncertainty_in_milliseconds', 0)
+        }
 
     def create_context_property(self, **kwargs):
         return {
@@ -118,6 +139,9 @@ class AlexaResponse:
 
         if len(self.payload_endpoints) > 0:
             response['event']['payload']['endpoints'] = self.payload_endpoints
+
+        if self.payload_change is not None:
+            response['event']['payload']['change'] = self.payload_change
 
         if remove_empty:
             if len(response['context']) < 1:
