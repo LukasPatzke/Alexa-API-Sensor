@@ -21,6 +21,8 @@ class AlexaResponse:
 
     def __init__(self, **kwargs):
 
+        self.remove_endpoint = kwargs.get('remove_endpoint', False)
+
         self.context_properties = []
         self.payload_endpoints = []
         self.payload_change = None
@@ -55,6 +57,15 @@ class AlexaResponse:
         if self.event['header']['name'] == 'AcceptGrant.Response' or self.event['header']['name'] == 'Discover.Response':
             self.event.pop('endpoint')
 
+        if self.remove_endpoint:
+            self.event.pop('endpoint')
+
+    def __repr__(self):
+        return self.get()
+
+    def __str__(self):
+        return str(self.get())
+
     def add_context_property(self, **kwargs):
         self.context_properties.append(self.create_context_property(**kwargs))
 
@@ -88,7 +99,8 @@ class AlexaResponse:
             'uncertaintyInMilliseconds': kwargs.get('uncertainty_in_milliseconds', 0)
         }
 
-    def create_context_property(self, **kwargs):
+    @staticmethod
+    def create_context_property(**kwargs):
         return {
             'namespace': kwargs.get('namespace', 'Alexa.EndpointHealth'),
             'name': kwargs.get('name', 'connectivity'),
@@ -97,7 +109,8 @@ class AlexaResponse:
             'uncertaintyInMilliseconds': kwargs.get('uncertainty_in_milliseconds', 0)
         }
 
-    def create_payload_endpoint(self, **kwargs):
+    @staticmethod
+    def create_payload_endpoint(**kwargs):
         # Return the proper structure expected for the endpoint
         endpoint = {
             'capabilities': kwargs.get('capabilities', []),
@@ -113,7 +126,8 @@ class AlexaResponse:
 
         return endpoint
 
-    def create_payload_endpoint_capability(self, **kwargs):
+    @staticmethod
+    def create_payload_endpoint_capability(**kwargs):
         capability = {
             'type': kwargs.get('type', 'AlexaInterface'),
             'interface': kwargs.get('interface', 'Alexa'),
