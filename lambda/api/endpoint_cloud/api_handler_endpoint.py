@@ -74,6 +74,12 @@ class ApiHandlerEndpoint:
             print('manufacturer_name:', self.manufacturer_name)
             print('user_id:', self.user_id)
 
+    @staticmethod
+    def get_db_value(value):
+        if 'S' in value:
+            value = value['S']
+        return value
+
     def create(self, request):
         try:
             endpoint_details = self.EndpointDetails()
@@ -105,28 +111,33 @@ class ApiHandlerEndpoint:
             # Create the thing details in DynamoDb
             response = self.create_endpoint_details(endpoint_details)
             if not ApiUtils.check_response(response):
-                print('ERR api_handler_endpoint.create.create_thing_details.response', response)
+                print('ERR api_handler_endpoint.create.create_endpoint_details.response', response)
 
             # Send an Event that updates Alexa
-            endpoint = {
-                'userId': endpoint_details.user_id,
-                'id': endpoint_details.id,
-                'friendlyName': endpoint_details.friendly_name,
-                'manufacturerName': endpoint_details.manufacturer_name,
-                'description': endpoint_details.description,
-                'displayCategories': endpoint_details.display_categories,
-                'capabilities': endpoint_details.capabilities
-            }
-
-            # Package into an Endpoint Cloud Event
-            event_request = {'event': {'type': 'AddOrUpdateReport', 'endpoint': endpoint}}
-            event_body = {'body': json.dumps(event_request)}
-            event = ApiHandlerEvent().create(event_body)
-            print(json.dumps(event, indent=2))
-            return response
+            return self.update_alexa(endpoint_details)
 
         except KeyError as key_error:
             return "KeyError: " + str(key_error)
+
+    @staticmethod
+    def update_alexa(endpoint_details):
+        # Send an Event that updates Alexa
+        endpoint = {
+            'id': endpoint_details.id,
+            'userId': endpoint_details.user_id,
+            'friendlyName': endpoint_details.friendly_name,
+            'manufacturerName': endpoint_details.manufacturer_name,
+            'description': endpoint_details.description,
+            'displayCategories': endpoint_details.display_categories,
+            'capabilities': endpoint_details.capabilities
+        }
+
+        # Package into an Endpoint Cloud Event
+        event_request = {'event': {'type': 'AddOrUpdateReport', 'endpoint': endpoint}}
+        event_body = {'body': json.dumps(event_request)}
+        event = ApiHandlerEvent().create(event_body)
+        print(json.dumps(event, indent=2))
+        return event
 
             
     @staticmethod
@@ -222,15 +233,13 @@ class ApiHandlerEndpoint:
 
         return response
 
-    def read(self, request):
+    def read(self):
         try:
             response = {}
-            resource = request['resource']
-            if resource == '/endpoints':
 
-                table = boto3.resource('dynamodb').Table('APISensorEndpointDetails')
-                result = table.scan()
-                response = result['Items']
+            table = boto3.resource('dynamodb').Table('APISensorEndpointDetails')
+            result = table.scan()
+            response = result['Items']
 
             print('LOG api_handler_endpoint.read -----')
             print(json.dumps(response))
@@ -241,17 +250,43 @@ class ApiHandlerEndpoint:
 
 
     # TODO Work in Progress: Update the Endpoint Details
-    @staticmethod
-    def update(request):
-        raise NotImplementedError()
-        # TODO Get the endpoint ID
-        # TODO With the endpoint ID, Get the endpoint information from IoT
-        # TODO With the endpoint ID, Get the endpoint details from DDB
-        #     Get the endpoint as JSON pre-configured
-        # TODO Send a command to IoT to update the endpoint
-        # TODO Send a command to DDB to update the endpoint
-        # TODO UPDATE ALEXA!
-        # Send AddOrUpdateReport to Alexa Event Gateway
+    def update(self, request):
+        try:
+            # Get the endpoint ID
+            json_object = json.loads(request['body'])
+            new_endpoint = json_object['event']['endpoint']
+            endpoint_id = new_endpoint['endpointId']
+            print('api_handler_endpoint.update.new_endpoint', json.dumps(new_endpoint))
+            # Get the endpoint from DDB
+            result = dynamodb_aws.get_item(TableName='APISensorEndpointDetails', Key={'EndpointId': {'S': endpoint_id}})
+            print('api_handler_endpoint.update.result', json.dumps(result))
+
+            endpoint_details = self.EndpointDetails()
+
+            endpoint_details.id = endpoint_id
+            endpoint_details.user_id = self.get_db_value(result['Item']['UserId'])
+            endpoint_details.friendly_name = self.get_db_value(result['Item']['FriendlyName'])
+            endpoint_details.manufacturer_name = self.get_db_value(result['Item']['ManufacturerName'])
+            endpoint_details.description = self.get_db_value(result['Item']['Description'])
+            endpoint_details.display_categories = json.loads(self.get_db_value(result['Item']['DisplayCategories']))
+            endpoint_details.capabilities = json.loads(self.get_db_value(result['Item']['Capabilities']))
+
+            if 'friendlyName' in new_endpoint:
+                endpoint_details.friendly_name = new_endpoint['friendlyName']
+            if 'description' in new_endpoint:
+                endpoint_details.description = new_endpoint['description']
+            
+            # Update the endpoint details in DynamoDb
+            response = self.create_endpoint_details(endpoint_details)
+            if not ApiUtils.check_response(response):
+                print('ERR api_handler_endpoint.update.create_endpoint_details.response', response)
+            
+            # Send AddOrUpdateReport to Alexa Event Gateway
+            return self.update_alexa(endpoint_details)
+
+        except KeyError as key_error:
+            return "KeyError: " + str(key_error)
+
 
     # TODO Work in Progress: Update Endpoint States
     @staticmethod

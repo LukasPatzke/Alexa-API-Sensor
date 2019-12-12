@@ -71,13 +71,19 @@ def handler(request, context):
 
         # GET endpoints : List Endpoints
         elif http_method == 'GET' and resource == '/endpoints':
-            response = api_handler.endpoint.read(request)
+            response = api_handler.endpoint.read()
             api_response.statusCode = 200
             api_response.body = json.dumps(response)
 
         # DELETE endpoints : Delete an Endpoint
         elif http_method == 'DELETE' and resource == '/endpoints':
             response = api_handler.endpoint.delete(request)
+            api_response.statusCode = 200
+            api_response.body = json.dumps(response)
+
+        # UPDATE endpoints : Delete an Endpoint
+        elif http_method == 'PUT' and resource == '/endpoints':
+            response = api_handler.endpoint.update(request)
             api_response.statusCode = 200
             api_response.body = json.dumps(response)
 
