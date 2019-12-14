@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import json
+import os
 
 import boto3
 from botocore.exceptions import ClientError
@@ -87,7 +88,11 @@ class ApiHandlerEndpoint:
             # Map our incoming API body to a thing that will virtually represent a discoverable device for Alexa
             json_object = json.loads(request['body'])
             endpoint = json_object['event']['endpoint']
-            endpoint_details.user_id = endpoint['userId']  # Expect a Profile
+            if 'userId' in endpoint:
+                endpoint_details.user_id = endpoint['userId']
+            else:
+                endpoint_details.user_id = os.environ.get('user_id', None)
+
             if 'capabilities' in endpoint:
                 endpoint_details.capabilities = endpoint['capabilities']
             else:

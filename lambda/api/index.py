@@ -51,8 +51,16 @@ def handler(request, context):
         resource = request['path']
         http_method = request["httpMethod"]
 
+        # CORS Preflight request
+        if http_method == 'OPTIONS':
+            api_response.statusCode = 204
+            api_response.headers['Access-Control-Allow-Origin'] = '*'
+            api_response.headers['Access-Control-Allow-Methods'] = 'POST, GET, DELETE, PUT'
+            api_response.headers['Access-Control-Allow-Headers'] = 'x-api-key, Content-Type'
+            api_response.headers['Allow'] = 'CONVERT'
+
         # POST to directives : Process an Alexa Directive - This will be used to implement Endpoint behavior and state
-        if http_method == 'POST' and resource == '/directives':
+        elif http_method == 'POST' and resource == '/directives':
             response = api_handler.directive.process(request, env_client_id, env_client_secret)
             if response['event']['header']['name'] == 'ErrorResponse':
                 error_message = response['event']['payload']['message']['error_description']

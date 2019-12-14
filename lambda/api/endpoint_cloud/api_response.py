@@ -28,6 +28,7 @@ class ApiResponse:
 
     def get(self):
         self.headers['Content-Type'] = 'application/json'
+        self.headers['Access-Control-Allow-Origin'] = '*'
 
         self.response['isBase64Encoded'] = str(self.isBase64Encoded)
         self.response['statusCode'] = str(self.statusCode)
