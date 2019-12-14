@@ -44,7 +44,9 @@ class ApiUtils:
         :param size:  The length of the code as an int
         :return: string code
         """
-        return ''.join(random.choices(string.ascii_uppercase + string.digits, k=size))
+        characters = ''.join(random.choices(string.ascii_uppercase + string.digits, k=size))
+        code = ''.join('-' if i % 4 == 0 else char for i, char in enumerate(characters, 1))
+        return code
 
     @staticmethod
     def get_random_color_string():

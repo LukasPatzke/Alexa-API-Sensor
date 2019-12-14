@@ -61,7 +61,7 @@ class ApiHandlerEndpoint:
             self.description = 'Sample Description'
             self.display_categories = ['CONTACT_SENSOR']
             self.friendly_name = ApiUtils.get_random_color_string() + ' Sample Endpoint'
-            self.id = 'SAMPLE_ENDPOINT_' + ApiUtils.get_code_string(8)
+            self.id = ApiUtils.get_code_string(16)
             self.manufacturer_name = 'Lukas Patzke'
             self.user_id = '0'
 
