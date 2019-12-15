@@ -10,3 +10,11 @@
     padding-top: 1em;
     padding-bottom: 1em;
 }
+
+.app-edit-dialog {
+    width: 50em;
+}
+
+.app-code-input {
+    min-height: 30em;
+}

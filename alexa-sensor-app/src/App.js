@@ -1,6 +1,10 @@
 import React from 'react';
-import { Button, Navbar, Alignment, HTMLTable, Dialog, Classes, FormGroup, InputGroup, Card, Elevation, H5, Text } from '@blueprintjs/core'
+import { Button, Navbar, Alignment, HTMLTable, Dialog, Classes, FormGroup, InputGroup, Card, Elevation, H5, Text, Tabs, Tab, Code, TextArea } from '@blueprintjs/core'
 import axios from 'axios';
+
+import { FocusStyleManager } from "@blueprintjs/core";
+ 
+FocusStyleManager.onlyShowFocusOnTabs();
 
 const AXIOS_CONFIG = {
   baseURL: 'http://alexa.pi.lan/api', 
@@ -25,8 +29,8 @@ class EndpointRow extends React.Component {
   render() {
     return (
       <tr onClick={this.handleClick}>
-        <td>{this.props.endpoint.friendlyName}</td>
-        <td>{this.props.endpoint.description}</td>
+        <td><span className={this.props.isLoading?'bp3-skeleton':''}>{this.props.endpoint.friendlyName}</span></td>
+        <td><span className={this.props.isLoading?'bp3-skeleton':''}>{this.props.endpoint.description}</span></td>
       </tr>
     )
   }
@@ -59,15 +63,18 @@ class DeleteDialog extends React.Component {
 class EndpointDialog extends React.Component {
   state = {
     isDeleteOpen: false,
+    selectedTab: 'input',
   }
 
   getEndpoint = () => {
     var endpoint = this.props.endpoint;
-    endpoint['endpointId'] = this.id.value;
-    endpoint['friendlyName'] = this.name.value;
-    endpoint['description'] = this.description.value;
-    endpoint['manufacturerName'] = this.manufacturer.value;
-
+    if (this.state.selectedTab === 'input') {
+      endpoint['friendlyName'] = this.name.value;
+      endpoint['description'] = this.description.value;
+      endpoint['manufacturerName'] = this.manufacturer.value;
+    } else {
+      endpoint = JSON.parse(this.code)
+    }
     return endpoint;
   }
 
@@ -116,13 +123,18 @@ class EndpointDialog extends React.Component {
     })
   }
 
+  handleTabChange = (newTabId) => {
+    this.setState({selectedTab: newTabId})
+  }
+
   render() {
     return (
       <Dialog 
           title='API Endpoint'
           isOpen={this.props.isOpen}
-          onClose={this.props.onClose}
+          onClose={this.props.onCancel}
           canOutsideClickClose={false}
+          className='app-edit-dialog'
       >
         <DeleteDialog
           isOpen={this.state.isDeleteOpen}
@@ -130,33 +142,81 @@ class EndpointDialog extends React.Component {
           onDelete={this.handleDelete}
         />
         <div className={Classes.DIALOG_BODY}>
-          <FormGroup label="Endpoint ID" labelFor='id-input'>
-            <InputGroup id='id-input' inputRef={(input) => this.id = input} disabled={this.props.mode==='edit'} defaultValue={this.props.endpoint.endpointId}/>
-          </FormGroup>
-          <FormGroup label="Name" labelFor='id-name'>
-            <InputGroup id='id-name' inputRef={(input) => this.name = input} defaultValue={this.props.endpoint.friendlyName}/>
-          </FormGroup>
-          <FormGroup label="Description" labelFor='id-description'>
-            <InputGroup id='id-description' inputRef={(input) => this.description = input} defaultValue={this.props.endpoint.description}/>
-          </FormGroup>
-          <FormGroup label="Manufacturer" labelFor='id-manufacturer'>
-            <InputGroup id='id-manufacturer' inputRef={(input) => this.manufacturer = input} defaultValue={this.props.endpoint.manufacturerName}/>
-          </FormGroup>
+          <Tabs id="DialogTabs" onChange={this.handleTabChange}>
+            <Tab 
+              id="input" 
+              title='Input' 
+              panel={
+                <FormInput 
+                  endpoint={this.props.endpoint} 
+                  inputRef={{
+                    name: (input) => this.name = input,
+                    description: (input) => this.description = input,
+                    manufacturer: (input) => this.manufacturer = input
+                  }}
+                />}
+              />
+            <Tab/>
+            <Tab
+              id='code'
+              title='JSON'
+              panel={
+                <CodeInput
+                  endpoint={this.props.endpoint}
+                  inputRef={(input) => this.code = input}
+                />
+              }
+            />
+          </Tabs>
         </div>
         <div className={Classes.DIALOG_FOOTER}>
           {this.props.mode==='edit'?
           <div className={Classes.DIALOG_FOOTER_ACTIONS}>
             <Button onClick={this.handleDeleteRequest} intent='danger'>Delete</Button>
             <Button onClick={this.handleUpdate} intent='primary'>Save</Button>
-            <Button onClick={this.props.onClose}>Close</Button>
+            <Button onClick={this.props.onCancel}>Close</Button>
           </div>:
           <div className={Classes.DIALOG_FOOTER_ACTIONS}>
             <Button onClick={this.handleCreate} intent='primary'>Create</Button>
-            <Button onClick={this.props.onClose}>Close</Button>
+            <Button onClick={this.props.onCancel}>Close</Button>
           </div>
           }
         </div>
       </Dialog>
+    )
+  }
+}
+
+class CodeInput extends React.Component {
+  render() {
+    return (
+      <TextArea 
+        fill={true} 
+        inputRef={this.props.inputRef}
+        className='app-code-input bp3-code-block'
+        defaultValue={JSON.stringify(this.props.endpoint, null, 2)}
+      />
+    )
+  }
+}
+
+class FormInput extends React.Component {
+  render() {
+    return (
+      <div>
+        <FormGroup label="Endpoint ID" labelFor='id-input'>
+          <InputGroup id='id-input' disabled={true} defaultValue={this.props.endpoint.endpointId}/>
+        </FormGroup>
+        <FormGroup label="Name" labelFor='id-name'>
+          <InputGroup id='id-name' inputRef={this.props.inputRef.name} defaultValue={this.props.endpoint.friendlyName}/>
+        </FormGroup>
+        <FormGroup label="Description" labelFor='id-description'>
+          <InputGroup id='id-description' inputRef={this.props.inputRef.description} defaultValue={this.props.endpoint.description}/>
+        </FormGroup>
+        <FormGroup label="Manufacturer" labelFor='id-manufacturer'>
+          <InputGroup id='id-manufacturer' inputRef={this.props.inputRef.manufacturer} defaultValue={this.props.endpoint.manufacturerName}/>
+        </FormGroup>
+      </div>
     )
   }
 }
@@ -168,7 +228,12 @@ class EndpointTable extends React.Component {
       isDialogOpen: false,
       selectedEndpoint: {},
       dialogMode: 'edit',
-      endpoints: [],
+      endpoints: [
+        {friendlyName: 'xxxxxxxxx', description: 'xxxxxxxxxxxxxxxxxxxxxxxxxx'},
+        {friendlyName: 'xxxxxxxxxxxxxx', description: 'xxxxxxxxxxxxxxxxxxx'},
+        {friendlyName: 'xxxxxx', description: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx'},
+      ],
+      isLoading: true,
     };
   }
 
@@ -177,9 +242,11 @@ class EndpointTable extends React.Component {
   }
 
   updateData = () => {
+    this.setState({isLoading: true})
     axios.get('/endpoints', AXIOS_CONFIG).then(res => {
       this.setState({
-        endpoints: res.data.map(loadEndpoint)
+        endpoints: res.data.map(loadEndpoint),
+        isLoading: false,
       })
     })
   }
@@ -200,20 +267,21 @@ class EndpointTable extends React.Component {
     })
   }
 
-  handleDialogClose = () => {
+  handleDialogClose = (reload) => {
     this.setState({isDialogOpen: false})
-    this.updateData()
+    if (reload) {this.updateData()}
   }
 
   render() {
     const rows = this.state.endpoints.map((endpoint, index) => {
-      return <EndpointRow key={index} endpoint={endpoint} onClick={this.handleRowClick}/>
+      return <EndpointRow key={index} endpoint={endpoint} onClick={this.handleRowClick} isLoading={this.state.isLoading}/>
     })
     return (
       <Card elevation={Elevation.TWO}>
         <EndpointDialog 
           isOpen={this.state.isDialogOpen} 
-          onClose={this.handleDialogClose}
+          onClose={()=>this.handleDialogClose(true)}
+          onCancel={()=>this.handleDialogClose(false)}
           endpoint={this.state.selectedEndpoint}
           mode={this.state.dialogMode}
         />
@@ -229,7 +297,7 @@ class EndpointTable extends React.Component {
             {rows}
           </tbody>
         </HTMLTable>
-        <Button onClick={this.handleAdd} intent='primary'>Add</Button>
+        <Button onClick={this.handleAdd} intent='primary' icon='add'>Add</Button>
       </Card>
     );
   }
