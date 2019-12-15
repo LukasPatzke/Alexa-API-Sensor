@@ -13,6 +13,7 @@
 
 import http.client
 import json
+import os
 from datetime import datetime, timedelta
 
 import boto3
@@ -37,9 +38,12 @@ class ApiHandlerEvent:
 
             # Get the common information from the body of the request
             event_type = json_object['event']['type']  # Expect AddOrUpdateReport, ChangeReport, DeleteReport
-            endpoint_user_id = json_object['event']['endpoint']['userId']  # Expect a Profile
             endpoint_id = json_object['event']['endpoint']['id']  # Expect a valid AWS IoT Thing Name
-
+            
+            if 'userId' in json_object['event']['endpoint']:
+                endpoint_user_id = json_object['event']['endpoint']['userId']
+            else:
+                endpoint_user_id = os.environ.get('user_id', None)
             # Get the Access Token
             token = self.get_user_info(endpoint_user_id)
 
