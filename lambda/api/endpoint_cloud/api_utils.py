@@ -44,8 +44,9 @@ class ApiUtils:
         :param size:  The length of the code as an int
         :return: string code
         """
-        characters = ''.join(random.choices(string.ascii_uppercase + string.digits, k=size))
-        code = ''.join('-' if i % 4 == 0 else char for i, char in enumerate(characters, 1))
+        total_size = size + size // 4 - 1
+        characters = ''.join(random.choices(string.ascii_uppercase + string.digits, k=total_size))
+        code = ''.join('-' if i % 5 == 0 else char for i, char in enumerate(characters, 1))
         return code
 
     @staticmethod
