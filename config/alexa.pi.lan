@@ -7,6 +7,9 @@ server {
         location /scheduler/ {
                 proxy_pass http://127.0.0.1:9090/;
         }
+        location /store/ {
+                proxy_pass http://127.0.0.1:9091/;
+        }
         location /app/ {
                 try_files $uri $uri/ =404;
                 root /var/www/alexa.pi.lan;

@@ -1,0 +1,13 @@
+[Unit]
+Description=uWSGI instance to serve an api db store
+After=network.target
+
+[Service]
+User=pi
+Group=www-data
+WorkingDirectory=/home/pi/store
+Environment="PATH=/home/pi/store/storeenv/bin"
+ExecStart=/home/pi/store/storeenv/bin/uwsgi --ini store.ini
+
+[Install]
+WantedBy=multi-user.target
