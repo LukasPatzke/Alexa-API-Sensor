@@ -2,6 +2,7 @@ import React from 'react';
 import { Navbar, Alignment} from '@blueprintjs/core'
 import { EndpointTable } from './components/endpoints'
 import { ScheduleTable } from './components/scheduler'
+import { StoreTable } from './components/store'
 import { FocusStyleManager } from "@blueprintjs/core";
  
 FocusStyleManager.onlyShowFocusOnTabs();
@@ -18,6 +19,7 @@ class App extends React.Component {
         <div className='app-main'>
           <EndpointTable/>
           <ScheduleTable/>
+          <StoreTable/>
         </div>
       </div>
     );
