@@ -45,6 +45,19 @@ def trigger_event(endpoint):
     response = requests.post(url, data=json.dumps(body))
     print(json.dumps(response.json()))
 
+def homebridge(accessory, state):
+
+    url = 'http://127.0.0.1:51828'
+
+    params = {
+        'accessoryId': accessory,
+        'state': state
+    }
+
+    response = requests.get(url, params=params)
+    print(json.dumps(response.json()))
+
+
 app = Flask(__name__)
 app.config.from_object(Config())
 
