@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, HTMLTable, Dialog, Classes, FormGroup, InputGroup, Card, Elevation, H5, Text } from '@blueprintjs/core'
 import axios from 'axios';
+import moment from 'moment-timezone';
 
 const AXIOS_CONFIG = {
     baseURL: 'http://alexa.pi.lan/store', 
@@ -121,6 +122,10 @@ const AXIOS_CONFIG = {
 
   
   class FormInput extends React.Component {
+    formatDate(string) {
+      var date = moment.utc(string)
+      return date.format('DD.MM.YYYY HH:mm:ss')
+    }
     render() {
       return (
         <div>
@@ -131,13 +136,13 @@ const AXIOS_CONFIG = {
             <InputGroup id='id-value' inputRef={this.props.inputRef.value} defaultValue={this.props.entry.value}/>
           </FormGroup>
           <FormGroup label="Created">
-            <Text>{this.props.entry.created}</Text>
+            <InputGroup disabled={true} defaultValue={this.formatDate(this.props.entry.created)}/>
           </FormGroup>
           <FormGroup label="Last Changed">
-            <Text>{this.props.entry.last_changed}</Text>
+            <InputGroup disabled={true} defaultValue={this.formatDate(this.props.entry.last_changed)}/>
           </FormGroup>
           <FormGroup label="Last Accessed">
-            <Text>{this.props.entry.last_accessed}</Text>
+            <InputGroup disabled={true} defaultValue={this.formatDate(this.props.entry.last_accessed)}/>
           </FormGroup>
         </div>
       )

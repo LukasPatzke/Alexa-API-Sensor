@@ -21,3 +21,8 @@
 .app-code-input {
     min-height: 30em;
 }
+
+input.bp3-input:disabled {
+    background-color: #ffffff;
+    color: #293742;
+}
