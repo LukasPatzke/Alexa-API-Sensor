@@ -4,7 +4,7 @@ import axios from 'axios';
 import moment from 'moment-timezone';
 
 const AXIOS_CONFIG = {
-    baseURL: 'http://alexa.pi.lan/store', 
+    baseURL: '/store', 
   }
   
   

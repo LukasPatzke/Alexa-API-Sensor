@@ -3,7 +3,7 @@ import { Button, HTMLTable, Dialog, Classes, FormGroup, InputGroup, Card, Elevat
 import axios from 'axios';
 
 const AXIOS_CONFIG = {
-    baseURL: 'http://alexa.pi.lan/api', 
+    baseURL: '/api', 
   }
   
   const loadEndpoint = (data) => {

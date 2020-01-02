@@ -2,8 +2,8 @@
   "name": "alexa-sensor-app",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://alexa.pi.lan",
-  "homepage": "http://alexa.pi.lan/app",
+  "proxy": "https://alexa.h.patzke.me",
+  "homepage": "https://alexa.h.patzke.me",
   "dependencies": {
     "@blueprintjs/core": "^3.22.2",
     "@blueprintjs/icons": "^3.12.0",

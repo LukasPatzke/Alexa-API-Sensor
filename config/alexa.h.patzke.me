@@ -1,0 +1,34 @@
+server {
+        listen 443 ssl;
+        listen [::]:443 ssl;
+
+        server_name alexa.h.patzke.me;
+
+        include /etc/nginx/ssl.conf;
+        include /etc/nginx/authentication.conf;
+
+        location / {
+                try_files       $uri $uri/ =404;
+                root            /var/www/alexa.h.patzke.me;
+                index           index.html;
+        }
+        location /scheduler/ {
+                proxy_pass      http://127.0.0.1:9090/;
+        }
+        location /store/ {
+                proxy_pass      http://127.0.0.1:9091/;
+        }
+        location /api/ {
+                proxy_pass              https://xxxxxxxxx.execute-api.eu-west-1.amazonaws.com/prod/;
+                proxy_set_header        X-Api-Key "XXX";
+        }
+}
+
+
+server {
+        listen 80;
+        listen [::]:80;
+
+        server_name alexa.h.patzke.me;
+        return 301 https://$host$request_uri;
+}
